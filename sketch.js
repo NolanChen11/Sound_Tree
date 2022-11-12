@@ -1,88 +1,52 @@
-let xlist=[];
-let ylist=[];
 let handpose;
 let video;
-let hands = [];
+let hand;
+let isHand;
 let op_parts;
-
-//a list of chords
-//let chordList=[];
-
-//backgroundImage;
-let backgroundImage;
-//is true when grabbing
-let grabbing;
-
 let dis;
-
-let indextip;
-let thumbtip;
-
-
 let system;
-
-let sound1;
-let reverb;
-let osc;
-let playingAmp;
+let soundList=[];
+let soundCount = 4;
 let T1; // create an object "tree".
-
-
-let branchColorList=[];
-let branchImage;
-
 function setup(){
     createCanvas(windowWidth,windowHeight);
-    backgroundImage=loadImage("sky.jpeg");
-    branchImage=loadImage("branch.png");
     soundFormats('mp3', 'ogg');
-    sound1 = loadSound('sound2');
+
+    //load sounds
+    for(let i=0;i<soundCount;i++){
+        soundList.push(loadSound("Crafted_"+(i+1)+".mp3"));
+    }
+    
     video = createCapture(VIDEO);
     handpose = ml5.handpose(video,handposeReady);
-    
     handpose.on("hand", results => {
-    hands = results;
+        if(results.length>0){
+            isHand=true;
+            hand=results[0]
+        }else{
+            isHand=false;
+        }
     });
-
     // Hide the video element, and just show the canvas
     video.hide();
-    reverb = new p5.Reverb();
-    reverb.process(sound1,3,2);
     resetSketch();
     
 }
-
+function resetSketch() {
+    chordList=[];
+    op_parts=[];
+    
+    T1=new tree(30,width/2);
+    system = new ParticleSystem(createVector(width / 2, 50));
+   
+}
 function draw(){
     background(218,217,217,20);
-    
-    //tint(255, 20);
-    //image(backgroundImage,0,0,windowWidth,windowHeight);
-    tint(255,0);
-    let preX;
-    let preY;
-    for(let i=0;i<xlist.length;i++){
-        fill(0,0,0);
-        noStroke();
-        let rh=3;
-        ellipse(800-xlist[i],ylist[i],rh,rh);
-        for (let j=0;j<xlist.length;j++){
-            if(int(random(10))==1){
-                strokeWeight(1);
-                stroke(0);
-                //line(800-xlist[i],ylist[i],800-xlist[j],ylist[j]);
-            }
-        }
-    }
     backgroundDrawing(113,T1.treeX,width/2,200);
-    if(hands.length>0){
-        
-        backgroundDrawing(34,T1.treeX,400,100);
-        //backgroundDrawing(34,T1.treeX,400);
+    if(isHand){
         drawKeypoints();
     }
     
-    xlist=[];
-    ylist=[];
     T1.run();
     //T2.run();
     //T3.run();
@@ -102,18 +66,6 @@ function mousePressed() {
 }
 
 
-function resetSketch() {
-    chordList=[];
-    op_parts=[];
-    
-    T1=new tree(30,width/2);
-
-    playingAmp=0;
-    system = new ParticleSystem(createVector(width / 2, 50));
-   
-}
-
-
 function handposeReady() {
   console.log("handpose ready!");
 }
@@ -121,35 +73,34 @@ function handposeReady() {
 
 // A function to draw ellipses over the detected keypoints
 function drawKeypoints() {
-    if (hands.length>0){
-        const hand = hands[0];
-        for (let j = 0; j < hand.landmarks.length; j += 1) {
-            const keypoint = hand.landmarks[j];
-            
-            let x=width-(keypoint[0]*width/video.width);
-            let y=keypoint[1]*height/video.height;
-            
-            op_parts.push([x,y]);
-            
-        }
-        drawHandLines(hand);
-        
+    for (let j = 0; j < hand.landmarks.length; j += 1) {
+        const keypoint = hand.landmarks[j];
+
+        let x=width-(keypoint[0]*width/video.width);
+        let y=keypoint[1]*height/video.height;
+
+        op_parts.push([x,y]);
+
     }
+    drawHandLines(hand);
 }
 
 //this function draws the lines for the hand.
 function drawHandLines(hand){
     let annotations=hand.annotations;
-    let parts = Object.keys(annotations);
+    let parts = Object.keys(hand.annotations);
     for (let part of parts){
         let count=0;
         let prex=0;
         let prey=0;
+        
         for (let coor of annotations[part]){ 
             let x=width-(coor[0]*width/video.width);
             let y=coor[1]*height/video.height;
             if(count!=0){
-                curveLines(x,y,prex,prey,50,10,0.5,(0,0,0));
+               
+                curveLines(x,y,prex,prey,50,2,2,(0,0,0));
+                
             }
             prex=x;
             prey=y;
@@ -165,16 +116,6 @@ function curveLines(x1,y1,x2,y2,n,k,weight,color){
     stroke(color);
     for (let i=0;i<k;i++){
         bezier(x1,y1,x1+random(-n,n),y1+random(-n,n),x2+random(-n,n),y2+random(-n,n),x2,y2);
-    }
-}
-
-function gotPoses(poses){
-    //console.log(poses);
-    if(poses.length>0){
-        for(let i=0;i<poses[0].pose.keypoints.length;i++){
-            xlist.push(poses[0].pose.keypoints[i].position.x);
-            ylist.push(poses[0].pose.keypoints[i].position.y);
-        }   
     }
 }
 
@@ -259,9 +200,7 @@ class chord{
         this.orV=this.velocityA;
         this.positionA=createVector(x1,y1);
         
-        
         this.positionB=createVector(x2,y2);
-        
         this.thickness=random(0.5,5);
     }
     move(){
@@ -279,7 +218,7 @@ class chord{
             max=this.positionB.x;
             min=this.positionA.x;
         }
-        
+
         let slope=(this.positionA.y-this.positionB.y)/(this.positionA.x-this.positionB.x);
         let testy=p[1]-this.positionA.y;
         let testx=slope*(p[0]-this.positionA.x);
@@ -324,10 +263,7 @@ class chord{
     }
     show(t){
         fill(0);
-        //ellipse(this.positionA.x,this.positionA.y,30,30);
-        //ellipse(this.positionB.x,this.positionB.y,30,30);
         strokeWeight(this.thickness);
-        
         stroke(0);
         if(t){
             curveLines(random(this.positionA.x-50,this.positionA.x+50),random(this.positionA.y-50,this.positionA.y+50),this.positionB.x,this.positionB.y,50,1,this.thickness,(0));
@@ -339,11 +275,7 @@ class chord{
     }
     run(){
         this.move();
-        let t=this.isTouched();
-        if(t){
-            console.log("yes");
-        }
-        this.show(t);
+        this.show(this.isTouched());
         this.velocityA=this.orV;
         
     }
@@ -356,7 +288,7 @@ class chord{
 let Particle = function(position) {
     this.acceleration = createVector(0, 0.05);
     this.velocity = createVector(random(-1, 1), random(-1, 0));
-    this.position = position.copy();
+    this.position = position;
     this.rC=random(34,113);
     this.red=random(10,245);
     this.green=random(10,245);
@@ -383,10 +315,7 @@ Particle.prototype.display = function() {
   //stroke(200, this.lifespan);
   noStroke();
   strokeWeight(2);
-  //fill(random(200,255),random(200,255),random(200,255), this.lifespan);
-  //fill(this.red,this.green,this.blue);
-  fill(this.rC,this.rC,this.rC);
-    
+  fill(this.rC);
   ellipse(this.position.x, this.position.y, this.rw, this.rw);
 };
 
@@ -400,13 +329,15 @@ Particle.prototype.isDead = function(){
 
 let ParticleSystem = function(position) {
     
-    this.origin = position.copy();
+    this.origin = position;
     this.particles = [];
     
     
 };
 
 //the particle system class.
+
+
 ParticleSystem.prototype.setPosition = function(newPosition) {
     this.origin = newPosition;
 }
@@ -414,7 +345,7 @@ ParticleSystem.prototype.setPosition = function(newPosition) {
 
 
 ParticleSystem.prototype.addParticle = function() {
-    if(this.particles.length<200&&frameCount%20==0){
+    if(this.particles.length<100&&frameCount%20==0){
         this.particles.push(new Particle(this.origin));
     }
   
@@ -422,7 +353,6 @@ ParticleSystem.prototype.addParticle = function() {
 ParticleSystem.prototype.setGradient = function(x,y,w,h,c1){
   noFill();
   let c2=color(218,217,217);
-  
     // Top to bottom gradient
     for (let i = y; i <= y + h; i++) {
         let inter = map(i, y, y + h, 0, 1);
@@ -430,9 +360,6 @@ ParticleSystem.prototype.setGradient = function(x,y,w,h,c1){
         stroke(c);
         line(x, i, x + w, i);
     }
-  
-
-    
 };
 
 ParticleSystem.prototype.run = function() {
@@ -440,12 +367,13 @@ ParticleSystem.prototype.run = function() {
     let p = this.particles[i];
     p.run();
     if (p.isDead()) {
-        
-        //rect(p.position.x,0,random(300),height);
         this.setGradient(p.position.x,0,random(300),height,color(p.rC,p.rC,p.rC));
-        sound1.rate(p.position.x/width);
-        sound1.setVolume(random(0.5,1));
-        sound1.play();
+        for (let i=0;i<soundList.length;i++){
+            if(p.position.x >= (i*width/soundCount) && p.position.x < ((i+1)*width/soundCount)){
+                soundList[i].setVolume(random(0.5,1));
+                soundList[i].play();
+            }
+        }
         this.particles.splice(i, 1);
     }
   }

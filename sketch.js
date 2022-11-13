@@ -7,14 +7,19 @@ let dis;
 let system;
 let soundList=[];
 let soundCount = 4;
+let touchingSoundList=[]
+let touchingSoundCount = 2
 let T1; // create an object "tree".
+let T2;
+let T3;
 function setup(){
     createCanvas(windowWidth,windowHeight);
     soundFormats('mp3', 'ogg');
 
     //load sounds
     for(let i=0;i<soundCount;i++){
-        soundList.push(loadSound("Crafted_"+(i+1)+".mp3"));
+        soundList.push(loadSound("Record_"+(i+1)+".mp3"));
+        touchingSoundList.push(loadSound("Crafted_"+(i+1)+".mp3"));
     }
     
     video = createCapture(VIDEO);
@@ -37,6 +42,9 @@ function resetSketch() {
     op_parts=[];
     
     T1=new tree(30,width/2);
+    T2=new tree(30,width/4);
+    T3=new tree(30,3*width/4);
+    
     system = new ParticleSystem(createVector(width / 2, 50));
    
 }
@@ -48,8 +56,8 @@ function draw(){
     }
     
     T1.run();
-    //T2.run();
-    //T3.run();
+    T2.run();
+    T3.run();
     op_parts=[];
     system.run();
     
@@ -233,6 +241,14 @@ class chord{
     }
     
     touchEffects(x,y){
+        
+        if (frameCount%20 == 0){
+            let index = int(random(0, touchingSoundCount));
+            touchingSoundList[index].rate(2*x/width);
+            touchingSoundList[index].setVolume(0.5);
+            touchingSoundList[index].play();
+        }
+        
         system.setPosition(createVector(x,y));
         system.addParticle();
         

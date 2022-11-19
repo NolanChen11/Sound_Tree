@@ -233,7 +233,7 @@ class chord{
         if (frameCount%20 == 0){
             let index = int(random(0, touchingSoundCount));
             touchingSoundList[index].rate(2*x/width);
-            touchingSoundList[index].setVolume(0.5);
+            touchingSoundList[index].setVolume(0.7);
             touchingSoundList[index].play();
         }
         
@@ -389,7 +389,7 @@ ParticleSystem.prototype.run = function() {
         this.setGradient(p.position.x,0,random(300),height,color(p.rC,p.rC,p.rC));
         for (let i=0;i<soundList.length;i++){
             if(p.position.x >= (i*width/soundCount) && p.position.x < ((i+1)*width/soundCount)){
-                soundList[i].setVolume(random(0.5,1));
+                soundList[i].setVolume(random(0.2,0.1));
                 soundList[i].play();
             }
         }

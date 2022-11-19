@@ -140,17 +140,6 @@ function backgroundDrawing(c,x,k,n){
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 //the tree class, running and storing the "chord" object.
 class tree{
     constructor(chord_number,x){
@@ -189,7 +178,6 @@ class tree{
         }
         pointListY=sort(pointListY,n);
         for(let i=0;i<n;i++){
-            //let thisPointY=random(lastPointY,this.treeHeight+(this.treeHeight-lastPointY)/2);
             pointList.push(createVector(this.treeX+random(-20,20),pointListY[i]));
         }
         return pointList;
@@ -300,6 +288,11 @@ class chord{
 
 
 
+
+
+
+
+
 // the particle class
 let Particle = function(position) {
     this.acceleration = createVector(0, 0.05);
@@ -343,6 +336,18 @@ Particle.prototype.isDead = function(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 let ParticleSystem = function(position) {
     
     this.origin = position;
@@ -352,8 +357,6 @@ let ParticleSystem = function(position) {
 };
 
 //the particle system class.
-
-
 ParticleSystem.prototype.setPosition = function(newPosition) {
     this.origin = newPosition;
 }
